@@ -1,0 +1,504 @@
+<div class="gt-break-word gt-second-line-indent"
+     style="margin-bottom: 10px;">
+  <strong style="font-size: 18px;">{{headline}}</strong>
+  {{#if showExport}}
+    <button class="gt-flat-btn gt-flat-btn-big gt-link-color download-trace"
+            style="font-size: 16px; margin: -6px 0;">
+      export
+    </button>
+  {{/if}}
+</div>
+{{#if active}}
+  <div>
+    <strong>ACTIVE</strong>
+  </div>
+{{^}}
+  {{#if partial}}
+    <div>
+      <strong>PARTIAL</strong>
+    </div>
+  {{/if}}
+{{/if}}
+{{#if error}}
+  <div>
+    <strong>ERROR</strong>
+  </div>
+{{/if}}
+{{#if async}}
+  <div>
+    <strong>ASYNC</strong>
+  </div>
+{{/if}}
+{{#if agent}}
+  <div>
+    <strong>{{agent}}</strong>
+  </div>
+{{/if}}
+<div>
+  <!-- note: surrounding div is for nicer copy paste result -->
+  <div class="gt-trace-attr-name">Transaction type:&nbsp;</div>
+  <div class="gt-trace-attr-value">{{transactionType}}</div>
+</div>
+<div>
+  <!-- note: surrounding div is for nicer copy paste result -->
+  <div class="gt-trace-attr-name">Transaction name:&nbsp;</div>
+  <div class="gt-trace-attr-value">{{transactionName}}</div>
+</div>
+{{#if error}}
+  <div class="gt-trace-attr-name">Error:&nbsp;</div>
+  <div class="gt-trace-attr-value">{{error.message}}</div>
+  {{#if error.exception}}
+    <div class="gt-trace-exception-indent">
+      <span class="gt-inline-block gt-unexpanded-content gt-link-color">exception</span>
+      {{! using span so background will stretch beyond page border if needed }}
+      <div class="gt-inline-block gt-expanded-content gt-nowrap gt-with-clip hide">
+        <div class="gt-link-color">exception</div>
+        <div class="gt-monospace gt-clip-text">
+          {{{exceptionHtml error.exception}}}
+        </div>
+        <i class="fa fa-clipboard gt-clip"></i>
+      </div>
+    </div>
+  {{/if}}
+{{/if}}
+<div>
+  <div class="gt-trace-attr-name">Start:&nbsp;</div>
+  <div class="gt-trace-attr-value">{{date startTime}}</div>
+</div>
+<div>
+  <div class="gt-trace-attr-name">Duration:&nbsp;</div>
+  <div class="gt-trace-attr-value"><!--
+    lack of space here is significant because of gt-pre-wrap (which is mixin to gt-trace-attr-value)
+ -->{{nanosToMillis durationNanos}}{{#if active}}..{{^}}{{#if partial}}..{{/if}}{{/if}}&nbsp;milliseconds<!--
+--></div>
+</div>
+{{#if user}}
+  <div>
+    <div class="gt-trace-attr-name">User:&nbsp;</div>
+    <div class="gt-trace-attr-value">{{user}}</div>
+  </div>
+{{/if}}
+{{#eachKeyValuePair attributes}}
+  <div>
+    <!-- note: surrounding div is for nicer copy paste result -->
+    <div class="gt-trace-attr-name">{{key}}:&nbsp;</div>
+    <div class="gt-trace-attr-value">{{value}}</div>
+  </div>
+{{/eachKeyValuePair}}
+{{#if detail}}
+  {{{headerDetailHtml detail}}}
+{{/if}}
+{{#if mainThreadRootTimer}}
+  <div class="gt-timers">
+    <div class="gt-timers-table">
+      <table class="gt-inline-block gt-trace-timer-table" style="border-spacing: 0;">
+        <thead>
+        <tr>
+          <td class="gt-bold gt-breakdown-header" style="text-align: left;">
+            Breakdown{{#if auxThreadRootTimers}} (Main Thread){{/if}}:
+          </td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">total&nbsp;(ms)</td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">count</td>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each mainBreakdown.flattenedTimers}}
+          <tr class="align-top" id="mft{{id}}"{{#unless show}} style="display: none;"{{/unless}}>
+            <td style="text-align: left;">
+              <div class="gt-indent2 gt-break-word gt-second-line-indent">
+                {{name}}
+              </div>
+            </td>
+            <td>{{nanosToMillis totalNanos}}{{#if active}}..{{/if}}</td>
+            <td>{{formatInteger count}}</td>
+          </tr>
+        {{/each}}
+        <tr class="align-top">
+          <td colspan="3" style="text-align: left;">
+            <div class="gt-indent2">
+              <div style="margin-left: -6px;">
+                <span tabindex="-1" id="mftForFocus"></span>
+                <button class="gt-flat-btn gt-link-color"
+                        id="mftShowMore"{{#unless mainBreakdown.ftShowMore}} style="display: none;"{{/unless}}>
+                  show more
+                </button>
+                <span id="mftShowMoreAndLess" style="display: none;">/</span>
+                <button class="gt-flat-btn gt-link-color"
+                        id="mftShowLess"
+                        style="display: none;">
+                  show less
+                </button>
+                <span id="mftShowAll"{{#unless mainBreakdown.ftShowMore}} style="display: none;"{{/unless}}>
+                  /
+                  <button class="gt-flat-btn gt-link-color">
+                    show all
+                  </button>
+                </span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <div style="display: inline-block; vertical-align: top; margin-top: -1px;">
+        <button class="gt-indent1 gt-flat-btn gt-flat-btn-big gt-link-color gt-timers-view-toggle">
+          switch to tree view
+        </button>
+      </div>
+    </div>
+    <div class="hide gt-timers-table">
+      <table class="gt-inline-block gt-trace-timer-table" style="border-spacing: 0;">
+        <thead>
+        <tr>
+          <td class="gt-bold gt-breakdown-header" style="text-align: left;">
+            Breakdown{{#if auxThreadRootTimers}} (Main Thread){{/if}}:
+          </td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">total&nbsp;(ms)</td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">count</td>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each mainBreakdown.timers}}
+          <tr class="align-top" id="mtt{{id}}"{{#unless show}} style="display: none;"{{/unless}}>
+            <td style="text-align: left;">
+              <div class="gt-indent2">
+                <div class="gt-break-word gt-second-line-indent" style="margin-left: {{timerIndent .}}px;">
+                  {{name}}{{#if extended}} (extended){{/if}}
+                </div>
+              </div>
+            </td>
+            <td>{{nanosToMillis totalNanos}}{{#if active}}..{{/if}}</td>
+            <td>{{formatInteger count}}</td>
+          </tr>
+        {{/each}}
+        <tr class="align-top">
+          <td colspan="3" style="text-align: left;">
+            <div class="gt-indent2">
+              <div style="margin-left: -6px;">
+                <span tabindex="-1" id="mttForFocus"></span>
+                <button class="gt-flat-btn gt-link-color"
+                        id="mttShowMore"{{#unless mainBreakdown.ttShowMore}} style="display: none;"{{/unless}}>
+                  show more
+                </button>
+                <span id="mttShowMoreAndLess" style="display: none;">/</span>
+                <button class="gt-flat-btn gt-link-color"
+                        id="mttShowLess"
+                        style="display: none;">
+                  show less
+                </button>
+                <span id="mttShowAll"{{#unless mainBreakdown.ttShowMore}} style="display: none;"{{/unless}}>
+                  /
+                  <button class="gt-flat-btn gt-link-color">
+                    show all
+                  </button>
+                </span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <button class="gt-indent1 gt-flat-btn gt-flat-btn-big gt-link-color gt-timers-view-toggle"
+              style="vertical-align: top; margin-top: -1px;">
+        switch to flattened view
+      </button>
+    </div>
+  </div>
+{{/if}}
+{{#if auxThreadRootTimers}}
+  <div class="gt-timers">
+    <div class="gt-timers-table">
+      <table class="gt-inline-block gt-trace-timer-table" style="border-spacing: 0;">
+        <thead>
+        <tr>
+          <td class="gt-bold gt-breakdown-header" style="text-align: left;">
+            Breakdown{{#if mainThreadRootTimer}} (Auxiliary Threads){{/if}}:
+          </td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">total&nbsp;(ms)</td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">count</td>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each auxBreakdown.flattenedTimers}}
+          <tr class="align-top" id="aft{{id}}"{{#unless show}} style="display: none;"{{/unless}}>
+            <td style="text-align: left;">
+              <div class="gt-indent2 gt-break-word gt-second-line-indent">
+                {{name}}
+              </div>
+            </td>
+            <td>{{nanosToMillis totalNanos}}{{#if active}}..{{/if}}</td>
+            <td>{{formatInteger count}}</td>
+          </tr>
+        {{/each}}
+        <tr class="align-top">
+          <td colspan="3" style="text-align: left;">
+            <div class="gt-indent2">
+              <div style="margin-left: -6px;">
+                <span tabindex="-1" id="aftForFocus"></span>
+                <button class="gt-flat-btn gt-link-color"
+                        id="aftShowMore"{{#unless auxBreakdown.ftShowMore}} style="display: none;"{{/unless}}>
+                  show more
+                </button>
+                <span id="aftShowMoreAndLess" style="display: none;">/</span>
+                <button class="gt-flat-btn gt-link-color"
+                        id="aftShowLess"
+                        style="display: none;">
+                  show less
+                </button>
+                <span id="aftShowAll"{{#unless auxBreakdown.ftShowMore}} style="display: none;"{{/unless}}>
+                  /
+                  <button class="gt-flat-btn gt-link-color">
+                    show all
+                  </button>
+                </span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <button class="gt-indent1 gt-flat-btn gt-flat-btn-big gt-link-color gt-timers-view-toggle"
+              style="vertical-align: top; margin-top: -1px;">
+        switch to tree view
+      </button>
+    </div>
+    <div class="hide gt-timers-table">
+      <table class="gt-inline-block gt-trace-timer-table" style="border-spacing: 0;">
+        <thead>
+        <tr>
+          <td class="gt-bold gt-breakdown-header" style="text-align: left;">
+            Breakdown{{#if mainThreadRootTimer}} (Auxiliary Threads){{/if}}:
+          </td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">total&nbsp;(ms)</td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">count</td>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each auxBreakdown.timers}}
+          <tr class="align-top" id="att{{id}}"{{#unless show}} style="display: none;"{{/unless}}>
+            <td style="text-align: left;">
+              <div class="gt-indent2">
+                <div class="gt-break-word gt-second-line-indent" style="margin-left: {{timerIndent .}}px;">
+                  {{name}}{{#if extended}} (extended){{/if}}
+                </div>
+              </div>
+            </td>
+            <td>{{nanosToMillis totalNanos}}{{#if active}}..{{/if}}</td>
+            <td>{{formatInteger count}}</td>
+          </tr>
+        {{/each}}
+        <tr class="align-top">
+          <td colspan="3" style="text-align: left;">
+            <div class="gt-indent2">
+              <div style="margin-left: -6px;">
+                <span tabindex="-1" id="attForFocus"></span>
+                <button class="gt-flat-btn gt-link-color"
+                        id="attShowMore"{{#unless auxBreakdown.ttShowMore}} style="display: none;"{{/unless}}>
+                  show more
+                </button>
+                <span id="attShowMoreAndLess" style="display: none;">/</span>
+                <button class="gt-flat-btn gt-link-color"
+                        id="attShowLess"
+                        style="display: none;">
+                  show less
+                </button>
+                <span id="attShowAll"{{#unless auxBreakdown.ttShowMore}} style="display: none;"{{/unless}}>
+                  /
+                  <button class="gt-flat-btn gt-link-color">
+                    show all
+                  </button>
+                </span>
+              </div>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <button class="gt-indent1 gt-flat-btn gt-flat-btn-big gt-link-color gt-timers-view-toggle"
+              style="vertical-align: top; margin-top: -1px;">
+        switch to flattened view
+      </button>
+    </div>
+  </div>
+{{/if}}
+{{#if asyncTimers}}
+  <div class="gt-timers">
+    <div class="gt-timers-table">
+      <table class="gt-inline-block" style="border-spacing: 0;">
+        <thead>
+        <tr>
+          <td class="gt-bold gt-breakdown-header" style="text-align: left;">
+            Breakdown (Async Timers):
+          </td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">total&nbsp;(ms)</td>
+          <td class="gt-breakdown-header" style="font-weight: 600;">count</td>
+        </tr>
+        </thead>
+        <tbody>
+        {{#each asyncTimers}}
+          <tr class="align-top">
+            <td style="text-align: left;">
+              <div class="gt-indent2 gt-break-word gt-second-line-indent">
+                {{name}}
+              </div>
+            </td>
+            <td>{{nanosToMillis totalNanos}}{{#if active}}..{{/if}}</td>
+            <td>{{formatInteger count}}</td>
+          </tr>
+        {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{{/if}}
+{{#if mainThreadStats}}
+  <div class="gt-bold gt-breakdown-header">
+    JVM Thread Stats{{#if auxThreadStats}} (Main Thread){{/if}}
+  </div>
+  {{#ifNotNA mainThreadStats/totalCpuNanos}}
+    <div class="gt-indent2">
+      <span>CPU time:</span>
+      {{nanosToMillis mainThreadStats/totalCpuNanos}} milliseconds
+    </div>
+  {{/ifNotNA}}
+  {{#ifNotNA mainThreadStats/totalBlockedNanos}}
+    <div class="gt-indent2">
+      <span>Blocked time:</span>
+      {{nanosToMillis mainThreadStats/totalBlockedNanos}} milliseconds
+    </div>
+  {{/ifNotNA}}
+  {{#ifNotNA mainThreadStats/totalWaitedNanos}}
+    <div class="gt-indent2">
+      <span>Waited time:</span>
+      {{nanosToMillis mainThreadStats/totalWaitedNanos}} milliseconds
+    </div>
+  {{/ifNotNA}}
+  {{#ifNotNA mainThreadStats/totalAllocatedBytes}}
+    <div class="gt-indent2">
+      <span>Allocated memory:</span>
+      {{formatAllocatedBytes mainThreadStats/totalAllocatedBytes}}
+    </div>
+  {{/ifNotNA}}
+{{/if}}
+{{#if auxThreadStats}}
+  <div class="gt-bold gt-breakdown-header">
+    JVM Thread Stats{{#if mainThreadStats}} (Auxiliary Threads){{/if}}
+  </div>
+  {{#ifNotNA auxThreadStats/totalCpuNanos}}
+    <div class="gt-indent2">
+      <span>CPU time:</span>
+      {{nanosToMillis auxThreadStats/totalCpuNanos}} milliseconds
+    </div>
+  {{/ifNotNA}}
+  {{#ifNotNA auxThreadStats/totalBlockedNanos}}
+    <div class="gt-indent2">
+      <span>Blocked time:</span>
+      {{nanosToMillis auxThreadStats/totalBlockedNanos}} milliseconds
+    </div>
+  {{/ifNotNA}}
+  {{#ifNotNA auxThreadStats/totalWaitedNanos}}
+    <div class="gt-indent2">
+      <span>Waited time:</span>
+      {{nanosToMillis auxThreadStats/totalWaitedNanos}} milliseconds
+    </div>
+  {{/ifNotNA}}
+  {{#ifNotNA auxThreadStats/totalAllocatedBytes}}
+    <div class="gt-indent2">
+      <span>Allocated memory:</span>
+      {{formatAllocatedBytes auxThreadStats/totalAllocatedBytes}}
+    </div>
+  {{/ifNotNA}}
+{{/if}}
+<br>
+{{#ifExistenceYes entriesExistence}}
+  <div>
+    <button class="gt-flat-btn gt-flat-btn-big-pad1aligned gt-entries-toggle">
+      <span class="gt-link-color">Trace entries ({{entryCount}})</span>
+    </button>
+    {{! spinner is not used in export file }}
+    <div>
+      <div class="hide gt-trace-detail-spinner"></div>
+    </div>
+  </div>
+  <div style="margin: 10px 0 0 1em;">
+    <div id="entries" style="font-family: Cousine, monospace;"></div>
+  </div>
+{{/ifExistenceYes}}
+{{#ifExistenceYes profileExistence}}
+  {{#if mainThreadProfileSampleCount}}
+    <div style="margin-top: 10px;">
+      <button class="gt-flat-btn gt-flat-btn-big-pad1aligned gt-main-thread-profile-toggle">
+        <span class="gt-link-color">Profile ({{mainThreadProfileSampleCount}})</span>
+      </button>
+      {{! spinner is not used in export file }}
+      <div>
+        <div class="hide gt-trace-detail-spinner"></div>
+      </div>
+    </div>
+    <div style="margin: 10px 0;">
+      <div class="gt-indent2 gt-nowrap hide" id="mainThreadProfileOuter">
+        <div style="padding-bottom: 10px;">
+          <input class="form-control gt-profile-text-filter"
+                 style="display: inline-block; width: 25em;"
+                 placeholder="filter the profile tree">
+        </div>
+
+        <div class="gt-profile"></div>
+      </div>
+    </div>
+  {{/if}}
+  {{#if auxThreadProfileSampleCount}}
+    <div style="margin-top: 10px;">
+      <button class="gt-flat-btn gt-flat-btn-big-pad1aligned gt-aux-thread-profile-toggle">
+        <span class="gt-link-color">Auxiliary Thread Profile ({{auxThreadProfileSampleCount}})</span>
+      </button>
+      {{! spinner is not used in export file }}
+      <div>
+        <div class="hide gt-trace-detail-spinner"></div>
+      </div>
+    </div>
+    <div style="margin: 10px 0;">
+      <div class="gt-indent2 gt-nowrap hide" id="auxThreadProfileOuter">
+        <div style="padding-bottom: 10px;">
+          <input class="form-control gt-profile-text-filter"
+                 style="display: inline-block; width: 25em;"
+                 placeholder="filter the profile tree">
+        </div>
+
+        <div class="gt-profile"></div>
+      </div>
+    </div>
+  {{/if}}
+{{/ifExistenceYes}}
+{{#ifExistenceExpired entriesExistence}}
+  {{#ifExistenceExpired profileExistence}}
+    <div style="margin: 10px 0;">
+      <strong>
+        Entries and profile for this trace have expired
+      </strong>
+      <em>
+        (see <a href="admin/storage#trace-capped-database-size">Configuration &gt; Storage &gt; Trace detail data</a>)
+      </em>
+    </div>
+  {{^}}
+    <div style="margin: 10px 0;">
+      <strong>
+        Entries for this trace have expired
+      </strong>
+      <em>
+        (see <a href="admin/storage#trace-capped-database-size">Configuration &gt; Storage &gt; Trace detail data</a>)
+      </em>
+    </div>
+  {{/ifExistenceExpired}}
+{{^}}
+  {{#ifExistenceExpired profileExistence}}
+    <div style="margin: 10px 0;">
+      <strong>
+        Profile for this trace has expired
+      </strong>
+      <em>
+        (see <a href="admin/storage#trace-capped-database-size">Configuration &gt; Storage &gt; Trace detail data</a>)
+      </em>
+    </div>
+  {{/ifExistenceExpired}}
+{{/ifExistenceExpired}}

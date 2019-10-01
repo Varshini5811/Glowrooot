@@ -1,0 +1,101 @@
+<!--
+  Copyright 2017 the original author or authors.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="gt-header" style="margin-bottom: 5px;">
+  <div class="gt-header-page-name">
+    <div ng-show="!layout.embeddedAgentRollup.display"
+         style="margin-bottom: 10px;">
+      Incidents
+    </div>
+    <div style="margin-top: -16px;" ng-show="layout.embeddedAgentRollup.display">
+      {{layout.embeddedAgentRollup.display}}
+      <!-- don't use border to simulate vertical bar since this will jitter on reload (at least in Chrome)
+           while chrome guesses the placement of the border based on default font and then it moves slightly
+           once font is available -->
+      <span class="gt-inline-block gt-separator">
+        |
+      </span>
+      <span class="gt-inline-block">
+        Incidents
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="panel panel-default gt-incident-active">
+  <div class="panel-heading">
+    <h2>Open</h2>
+  </div>
+  <div class="panel-body">
+    <div ng-include src="'template/gt-loading-overlay.html'"></div>
+    <div ng-include src="'template/gt-http-error-overlay.html'"></div>
+    <div style="margin: 15px;">
+      <table class="table"
+             style="table-layout: fixed;">
+        <thead>
+        <th style="width: 105px;">Severity</th>
+        <th style="width: 110px;">Duration</th>
+        <th style="width: 160px;" ng-if="layout.central">Agent</th>
+        <th>Condition</th>
+        </thead>
+        <tbody>
+        <tr ng-repeat="incident in openIncidents"
+            class="gt-red"
+            style="font-weight: bold; font-size: 16px;">
+          <td>{{incident.severity}}</td>
+          <td>{{incident.durationMillis | gtDuration}}</td>
+          <td ng-if="layout.central">{{incident.agentRollupDisplay}}</td>
+          <td>{{incident.display}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="panel panel-default"
+     ng-if="loaded"
+     style="margin-top: 50px;">
+  <div class="panel-heading">
+    <h2>Resolved
+      <div style="float: right; padding-top: 10px; font-size: 24px;">(last 30 days)</div>
+    </h2>
+  </div>
+  <div class="panel-body">
+    <div ng-include src="'template/gt-http-error-overlay.html'"></div>
+    <div style="margin: 15px;">
+      <table class="table"
+             style="table-layout: fixed;">
+        <thead>
+        <th style="width: 105px;">Severity</th>
+        <th style="width: 220px;">Resolved</th>
+        <th style="width: 110px;">Duration</th>
+        <th style="width: 160px;" ng-if="layout.central">Agent</th>
+        <th>Condition</th>
+        </thead>
+        <tbody>
+        <tr ng-repeat="incident in resolvedIncidents"
+            style="font-size: 16px;">
+          <td>{{incident.severity}}</td>
+          <td>{{incident.resolveTime | date:'medium'}}</td>
+          <td>{{incident.durationMillis | gtDuration}}</td>
+          <td ng-if="layout.central">{{incident.agentRollupDisplay}}</td>
+          <td>{{incident.display}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

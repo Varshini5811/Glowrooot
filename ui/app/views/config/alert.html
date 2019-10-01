@@ -1,0 +1,362 @@
+<!--
+  Copyright 2012-2018 the original author or authors.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h2>
+      <a class="pull-right"
+         style="font-size: 16px; padding-top: 16px;"
+         href="config/alert-list{{agentQueryString()}}">
+        Return to list
+      </a>
+      <span ng-class="{'gt-lighten-font': !loaded && !httpError}">
+        Alerts
+        <span class="gt-inline-block gt-separator">
+          |
+        </span>
+        <span style="font-size: 24px;">{{heading}}</span>
+      </span>
+    </h2>
+  </div>
+  <div class="panel-body">
+    <div ng-include src="'template/gt-loading-overlay.html'"></div>
+    <div ng-include src="'template/gt-http-error-overlay.html'"></div>
+    <!-- intentionally not using gt-form-autofocus-on-first-input as it doesn't make the most sense on this form -->
+    <div ng-form
+         class="form-horizontal"
+         name="formCtrl"
+         style="padding-top: 15px;">
+      <fieldset>
+        <legend>Condition</legend>
+        <div class="form-group gt-form-group-without-help-block"
+             ng-if="layout.central">
+          <label class="col-lg-3 control-label">
+            Based on
+          </label>
+          <div class="col-lg-9">
+            <div class="radio">
+              <label>
+                <input type="radio"
+                       ng-model="config.condition.conditionType"
+                       ng-disabled="!agentRollup.permissions.config.edit.alert"
+                       value="metric">
+                Metric
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio"
+                       ng-model="config.condition.conditionType"
+                       ng-disabled="!agentRollup.permissions.config.edit.alert"
+                       value="synthetic-monitor">
+                Synthetic monitor
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio"
+                       ng-model="config.condition.conditionType"
+                       ng-disabled="!agentRollup.permissions.config.edit.alert"
+                       value="heartbeat">
+                Heartbeat
+              </label>
+            </div>
+          </div>
+        </div>
+        <div ng-if="config.condition.conditionType === 'metric'">
+          <div class="form-group"
+               ng-class="{'has-error': formCtrl.conditionMetric.$invalid}">
+            <label class="col-lg-3 control-label"
+                   for="conditionMetric">
+              Metric
+            </label>
+            <div class="col-lg-9">
+              <select ng-model="config.condition.metric"
+                      ng-disabled="!agentRollup.permissions.config.edit.alert"
+                      ng-required="config.condition.conditionType === 'metric'"
+                      class="form-control"
+                      name="conditionMetric"
+                      id="conditionMetric"
+                      style="width: auto;">
+                <option value="" ng-disabled="config.condition.metricName"></option>
+                <option ng-repeat="metric in metrics track by metric.id"
+                        ng-value="metric.id"
+                        ng-disabled="metric.disabled"
+                        ng-style="{'font-weight': metric.heading ? 'bold' : 'normal'}">
+                  {{metric.display}}
+                </option>
+              </select>
+              <div class="help-block">
+                The metric that this alert monitors.
+              </div>
+            </div>
+          </div>
+          <div class="form-group" ng-class="{'has-error': formCtrl.transactionType.$invalid}"
+               ng-if="showTransactionTypeAndName()">
+            <label class="col-lg-3 control-label"
+                   for="transactionType">
+              Transaction type
+            </label>
+            <div class="col-lg-9">
+              <select ng-model="config.condition.transactionType"
+                      class="form-control"
+                      ng-required="loaded"
+                      ng-disabled="!agentRollup.permissions.config.edit.alert"
+                      name="transactionType"
+                      id="transactionType"
+                      style="width: auto;">
+                <option ng-repeat="transactionType in transactionTypes()"
+                        ng-value="transactionType">
+                  {{transactionType}}
+                </option>
+                <option ng-value="config.condition.transactionType"
+                        disabled
+                        ng-if="config.condition.transactionType && transactionTypes().indexOf(config.condition.transactionType) === -1">
+                  {{config.condition.transactionType}} (not available)
+                </option>
+              </select>
+              <div class="help-block">
+                The transaction type that this alert monitors.
+              </div>
+            </div>
+          </div>
+          <div gt-form-group
+               gt-label="Transaction name"
+               gt-model="config.condition.transactionName"
+               gt-disabled="!agentRollup.permissions.config.edit.alert"
+               gt-width="30em"
+               ng-if="showTransactionTypeAndName()">
+            <div class="help-block">
+              (Optional) The transaction name that this alert monitors.
+            </div>
+          </div>
+          <div gt-form-group
+               gt-label="Percentile"
+               gt-model="config.condition.percentile"
+               gt-number="true"
+               gt-pattern="pattern.percentage"
+               gt-required="loaded"
+               gt-disabled="!agentRollup.permissions.config.edit.alert"
+               gt-width="7em"
+               gt-addon="percentile"
+               ng-if="config.condition.metric === 'transaction:x-percentile'">
+            <div class="help-block">
+              The transaction response time percentile to use for alerting.
+            </div>
+          </div>
+          <div gt-form-group
+               gt-label="Threshold"
+               gt-model="config.condition.threshold"
+               gt-number="true"
+               gt-pattern="{{ config.condition.metric === 'error:rate' ? 'pattern.percentage' : 'pattern.double' }}"
+               gt-disabled="!agentRollup.permissions.config.edit.alert"
+               gt-required="loaded"
+               gt-width="7em"
+               gt-addon="{{unit()}}">
+            <div class="help-block">
+              If the {{phraseForValue()}} over the given time period exceeds this threshold, then alert will be
+              triggered.
+            </div>
+          </div>
+          <div gt-form-group
+               gt-type="checkbox"
+               gt-label="Lower bound threshold?"
+               gt-checkbox-label="Lower bound threshold"
+               gt-model="config.condition.lowerBoundThreshold"
+               gt-disabled="!agentRollup.permissions.config.edit.alert">
+            <div class="help-block">
+              Alert if the {{phraseForValue()}} drops below the threshold, instead of alerting if the
+              {{phraseForValue()}} exceeds the threshold.
+            </div>
+          </div>
+          <div gt-form-group
+               gt-label="Time period"
+               gt-model="page.timePeriodMinutes"
+               gt-number="true"
+               gt-pattern="pattern.integer"
+               gt-required="loaded"
+               gt-disabled="!agentRollup.permissions.config.edit.alert"
+               gt-width="7em"
+               gt-addon="minutes">
+            <div class="help-block">
+              The time period over which the {{phraseForValue()}} is calculated.
+            </div>
+          </div>
+          <div gt-form-group
+               gt-label="Minimum transaction count"
+               gt-model="config.condition.minTransactionCount"
+               gt-number="true"
+               gt-pattern="pattern.integer"
+               gt-required="loaded"
+               gt-disabled="!agentRollup.permissions.config.edit.alert"
+               gt-width="7em"
+               ng-if="showTransactionTypeAndName() && config.condition.metric !== 'transaction:count' && config.condition.metric !== 'error:count'">
+            <div class="help-block">
+              Time periods with very few transactions have much less meaningful metrics, so this can be used to
+              suppress alerts from being generated unless the time period has a minimum transaction count.
+            </div>
+          </div>
+        </div>
+        <div ng-if="config.condition.conditionType === 'heartbeat'">
+          <div gt-form-group
+               gt-label="Time period"
+               gt-model="config.condition.timePeriodSeconds"
+               gt-number="true"
+               gt-pattern="pattern.integer"
+               gt-required="loaded"
+               gt-disabled="!agentRollup.permissions.config.edit.alert"
+               gt-width="7em"
+               gt-addon="seconds">
+            <div class="help-block">
+              The time period after which the alert is triggered if no heartbeat has been received from the agent.
+              Heartbeats are normally received every 5 seconds.
+            </div>
+          </div>
+        </div>
+        <div ng-if="config.condition.conditionType === 'synthetic-monitor'">
+          <div class="form-group" ng-class="{'has-error': formCtrl.syntheticMonitorId.$invalid}">
+            <label class="col-lg-3 control-label"
+                   for="syntheticMonitorId">
+              Synthetic monitor
+            </label>
+            <div class="col-lg-9">
+              <select ng-model="config.condition.syntheticMonitorId"
+                      class="form-control"
+                      ng-required="loaded"
+                      ng-disabled="!agentRollup.permissions.config.edit.alert"
+                      name="syntheticMonitorId"
+                      id="syntheticMonitorId"
+                      style="width: auto;">
+                <option value="__________"
+                        disabled
+                        ng-if="!syntheticMonitors.length">
+                  (there are no synthetic monitors available)
+                </option>
+                <option ng-repeat="syntheticMonitor in syntheticMonitors"
+                        ng-value="syntheticMonitor.id">
+                  {{syntheticMonitor.display}}
+                </option>
+              </select>
+              <div class="help-block">
+                The synthetic monitor that this alert is based on.
+              </div>
+            </div>
+          </div>
+          <div gt-form-group
+               gt-label="Threshold"
+               gt-model="config.condition.thresholdMillis"
+               gt-number="true"
+               gt-pattern="pattern.integer"
+               gt-required="loaded"
+               gt-disabled="!agentRollup.permissions.config.edit.alert"
+               gt-width="7em"
+               gt-addon="milliseconds">
+            <div class="help-block">
+              If the synthetic monitor takes more than this threshold, then an alert will be triggered.
+            </div>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Severity</legend>
+        <div class="form-group gt-form-group-without-help-block"
+             ng-class="{'has-error': formCtrl.severity.$invalid}">
+          <label class="col-lg-3 control-label"
+                 for="severity">
+            Severity
+          </label>
+          <div class="col-lg-9">
+            <select ng-model="config.severity"
+                    class="form-control"
+                    id="severity"
+                    name="severity"
+                    ng-required="loaded"
+                    ng-disabled="!agentRollup.permissions.config.edit.alert"
+                    style="width: auto;">
+              <option value="" ng-if="!config.severity"></option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Email notification</legend>
+        <div gt-form-group
+             gt-type="textarea"
+             gt-label="Email addresses"
+             gt-model="page.emailAddresses"
+             gt-disabled="!agentRollup.permissions.config.edit.alert"
+             gt-width="30em">
+          <div class="help-block">
+            Comma separated list of email addresses.
+          </div>
+        </div>
+      </fieldset>
+      <fieldset ng-if="pagerDutyIntegrationKeys.length">
+        <legend>PagerDuty notification</legend>
+        <div class="form-group"
+             ng-class="{'has-error': formCtrl.pagerDutyIntegrationKey.$invalid}">
+          <label class="col-lg-3 control-label"
+                 for="pagerDutyIntegrationKey">
+            Integration key
+          </label>
+          <div class="col-lg-9 gt-form-group-without-help-block">
+            <select ng-model="config.pagerDutyNotification.pagerDutyIntegrationKey"
+                    ng-disabled="!agentRollup.permissions.config.edit.alert"
+                    class="form-control"
+                    name="pagerDutyIntegrationKey"
+                    id="pagerDutyIntegrationKey"
+                    style="width: auto;">
+              <option value=""></option>
+              <option ng-repeat="pagerDutyIntegrationKey in pagerDutyIntegrationKeys track by pagerDutyIntegrationKey.key"
+                      ng-value="pagerDutyIntegrationKey.key">
+                {{pagerDutyIntegrationKey.display}} ({{pagerDutyIntegrationKey.key}})
+              </option>
+              <option ng-value="config.pagerDutyNotification.pagerDutyIntegrationKey"
+                      disabled
+                      ng-if="displayUnavailablePagerDutyIntegrationKey()">
+                {{config.pagerDutyNotification.pagerDutyIntegrationKey}} (not available)
+              </option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+      <div class="form-group gt-form-buttons"
+           ng-if="agentRollup.permissions.config.edit.alert">
+        <div class="col-lg-offset-3 col-lg-9 gt-sometimes-legend-padding">
+          <div gt-button-group>
+            <div gt-button
+                 gt-label="{{config.version ? 'Save changes' : 'Add'}}"
+                 gt-click="save(deferred)"
+                 gt-disabled="formCtrl.$invalid"
+                 class="gt-inline-block">
+            </div>
+            <!-- using ng-show instead of gt-show -->
+            <div gt-button
+                 ng-show="config.version"
+                 gt-label="Delete"
+                 gt-click="delete(deferred)"
+                 gt-btn-class="gt-btn-danger-light"
+                 class="gt-inline-block">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

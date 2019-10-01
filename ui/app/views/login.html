@@ -1,0 +1,52 @@
+<!--
+  Copyright 2013-2016 the original author or authors.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="gt-header">
+  <div class="gt-header-page-name">
+    Login
+  </div>
+</div>
+<div ng-form
+     gt-form-with-primary-button
+     gt-form-autofocus-on-first-input
+     name="formCtrl">
+  <div class="form-group">
+    <input class="form-control gt-inline-block"
+           ng-model="page.username"
+           id="username"
+           placeholder="Enter username"
+           style="max-width: 20em;">
+    <span class="gt-red"
+          ng-show="message"
+          style="padding-left: 15px;">
+      {{message}}
+    </span>
+  </div>
+  <div class="form-group">
+    <input type="password"
+           class="form-control gt-inline-block"
+           ng-model="page.password"
+           id="password"
+           placeholder="Enter password"
+           style="max-width: 20em;">
+  </div>
+  <div class="form-group gt-form-buttons">
+    <div gt-button
+         gt-label="Login"
+         gt-click="login(deferred)"
+         gt-disabled="!page.password">
+    </div>
+  </div>
+</div>
