@@ -267,7 +267,7 @@
     <profile>
       <id>async-http-client-2.x</id>
       <properties>
-        <asynchttpclient.version>2.0.37</asynchttpclient.version>
+        <asynchttpclient.version>1.9.0</asynchttpclient.version>
         <!-- this is needed because netty version is dependency managed in the parent pom -->
         <netty.version>4.0.52.Final</netty.version>
       </properties>
