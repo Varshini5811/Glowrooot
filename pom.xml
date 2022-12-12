@@ -81,7 +81,7 @@
     <protobuf.version>3.5.1</protobuf.version>
     <protoc.version>3.5.1</protoc.version>
     <!-- need to stick to netty version that is used by grpc version above -->
-    <netty.version>4.1.17.Final</netty.version>
+    <netty.version>4.1.86.Final</netty.version>
     <!-- jackson 2.7 requires JDK 7+ -->
     <jackson.version>2.6.7</jackson.version>
     <logback.version>1.2.3</logback.version>
